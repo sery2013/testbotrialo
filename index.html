@@ -1,1514 +1,1153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rialo Intelligence Hub — Subzero Labs</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #050608;
-    --surface: #0F1115;
-    --surface2: #13171E;
-    --border: #1E222B;
-    --cyan: #00F0FF;
-    --purple: #A855F7;
-    --green: #00FF85;
-    --text: #E8ECF4;
-    --muted: #5A6478;
-    --radius: 16px;
-    --font: 'Inter', sans-serif;
-    --mono: 'JetBrains Mono', monospace;
-  }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  /* Digital Grid Background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,240,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,240,255,0.025) 1px, transparent 1px);
-    background-size: 48px 48px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    top: -30%;
-    left: -10%;
-    width: 60%;
-    height: 60%;
-    background: radial-gradient(ellipse, rgba(168,85,247,0.06) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ─── TOPBAR ─────────────────────────────── */
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 32px;
-    background: rgba(5,6,8,0.75);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-
-  .logo-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, var(--cyan), var(--purple));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 800;
-    color: #000;
-    box-shadow: 0 0 16px rgba(0,240,255,0.4);
-  }
-
-  .logo-text span { color: var(--cyan); }
-
-  .topbar-right { display: flex; align-items: center; gap: 14px; }
-
-  .badge-live {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--green);
-    background: rgba(0,255,133,0.08);
-    border: 1px solid rgba(0,255,133,0.2);
-    border-radius: 100px;
-    padding: 4px 10px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  .badge-live::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse-dot 1.4s ease-in-out infinite;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
-  }
-
-  /* ─── WALLET BUTTON ────────────────────── */
-  #walletBtn {
-    padding: 9px 18px;
-    border-radius: 10px;
-    border: 1px solid var(--cyan);
-    background: rgba(0,240,255,0.06);
-    color: var(--cyan);
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.25s;
-    box-shadow: 0 0 12px rgba(0,240,255,0.15);
-    white-space: nowrap;
-  }
-  #walletBtn:hover { background: rgba(0,240,255,0.14); box-shadow: 0 0 22px rgba(0,240,255,0.3); }
-  #walletBtn.connected {
-    border-color: var(--green);
-    color: var(--green);
-    background: rgba(0,255,133,0.08);
-    box-shadow: 0 0 18px rgba(0,255,133,0.25);
-  }
-
-  /* ─── MAIN LAYOUT ─────────────────────── */
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 32px 24px 64px;
-  }
-
-  /* ─── HERO ────────────────────────────── */
-  .hero {
-    text-align: center;
-    padding: 56px 16px 48px;
-  }
-
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--purple);
-    border: 1px solid rgba(168,85,247,0.3);
-    background: rgba(168,85,247,0.07);
-    border-radius: 100px;
-    padding: 5px 14px;
-    margin-bottom: 24px;
-  }
-
-  .hero h1 {
-    font-size: clamp(38px, 5.5vw, 72px);
-    font-weight: 800;
-    line-height: 1.08;
-    letter-spacing: -2px;
-    background: linear-gradient(135deg, #ffffff 0%, var(--cyan) 55%, var(--purple) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 20px;
-  }
-
-  .hero p {
-    font-size: 17px;
-    color: var(--muted);
-    max-width: 560px;
-    margin: 0 auto 36px;
-    line-height: 1.65;
-    font-weight: 400;
-  }
-
-  .hero-stats {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    flex-wrap: wrap;
-  }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .stat-val {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--cyan);
-    font-family: var(--mono);
-    text-shadow: 0 0 20px rgba(0,240,255,0.5);
-  }
-  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
-
-  /* ─── BENTO GRID ────────────────────── */
-  .bento {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: auto;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
-  .card:hover { border-color: rgba(0,240,255,0.18); box-shadow: 0 0 30px rgba(0,240,255,0.06); }
-
-  .card-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--muted);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .card-title::before {
-    content: '';
-    display: block;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 0 8px var(--cyan);
-  }
-
-  /* Card spans */
-  .span-7 { grid-column: span 7; }
-  .span-5 { grid-column: span 5; }
-  .span-8 { grid-column: span 8; }
-  .span-4 { grid-column: span 4; }
-  .span-6 { grid-column: span 6; }
-  .span-12 { grid-column: span 12; }
-
-  @media (max-width: 1024px) {
-    .span-7, .span-5, .span-8, .span-4, .span-6 { grid-column: span 12; }
-  }
-  @media (min-width: 1025px) and (max-width: 1200px) {
-    .span-7 { grid-column: span 7; }
-    .span-5 { grid-column: span 5; }
-    .span-8 { grid-column: span 8; }
-    .span-4 { grid-column: span 4; }
-    .span-6 { grid-column: span 6; }
-  }
-
-  /* ─── CHART CARD ─────────────────────── */
-  .chart-card { grid-column: span 7; min-height: 300px; }
-  .chart-wrap { height: 240px; position: relative; }
-
-  .tps-display {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .tps-num {
-    font-size: 36px;
-    font-weight: 800;
-    font-family: var(--mono);
-    color: var(--cyan);
-    text-shadow: 0 0 24px rgba(0,240,255,0.6);
-    transition: all 0.3s;
-  }
-  .tps-unit { font-size: 13px; color: var(--muted); font-weight: 500; }
-  .tps-delta {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--green);
-    background: rgba(0,255,133,0.08);
-    border-radius: 6px;
-    padding: 2px 7px;
-    font-family: var(--mono);
-  }
-
-  /* ─── METRICS CARD ───────────────────── */
-  .metrics-card { grid-column: span 5; }
-
-  .metric-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 13px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .metric-row:last-child { border-bottom: none; }
-  .metric-name { font-size: 13px; color: var(--muted); font-weight: 500; }
-  .metric-val {
-    font-size: 14px;
-    font-weight: 700;
-    font-family: var(--mono);
-    color: var(--text);
-  }
-  .metric-val.cyan { color: var(--cyan); }
-  .metric-val.purple { color: var(--purple); }
-  .metric-val.green { color: var(--green); }
-
-  .progress-bar {
-    width: 100%;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-top: 5px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, var(--cyan), var(--purple));
-    animation: progress-anim 2s ease-in-out infinite alternate;
-  }
-
-  @keyframes progress-anim {
-    from { width: 72%; }
-    to { width: 94%; }
-  }
-
-  /* ─── TERMINAL CARD ──────────────────── */
-  .terminal-card { grid-column: span 8; }
-
-  .terminal {
-    background: #08090C;
-    border: 1px solid #1A1E27;
-    border-radius: 10px;
-    overflow: hidden;
-    height: 280px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .terminal-header {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 10px 14px;
-    background: #0D0F13;
-    border-bottom: 1px solid #1A1E27;
-    flex-shrink: 0;
-  }
-
-  .dot { width: 11px; height: 11px; border-radius: 50%; }
-  .dot-r { background: #FF5F56; }
-  .dot-y { background: #FFBD2E; }
-  .dot-g { background: #27C93F; }
-
-  .terminal-title {
-    margin-left: 6px;
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--muted);
-  }
-
-  .terminal-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px;
-    font-family: var(--mono);
-    font-size: 11.5px;
-    line-height: 1.7;
-    scrollbar-width: thin;
-    scrollbar-color: #1E222B transparent;
-  }
-
-  .log-line { display: block; margin-bottom: 2px; }
-  .log-ok { color: #00FF85; }
-  .log-info { color: var(--cyan); }
-  .log-warn { color: #FFB800; }
-  .log-svm { color: var(--purple); }
-  .log-ts { color: var(--muted); margin-right: 8px; }
-
-  /* ─── AI CHAT CARD ───────────────────── */
-  .ai-card { grid-column: span 4; display: flex; flex-direction: column; }
-
-  .lang-toggle {
-    display: flex;
-    align-items: center;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 3px;
-    width: fit-content;
-    margin-bottom: 14px;
-  }
-
-  .lang-btn {
-    padding: 5px 14px;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-family: var(--font);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .lang-btn.active {
-    background: linear-gradient(135deg, var(--cyan), var(--purple));
-    color: #000;
-  }
-
-  .chat-messages {
-    flex: 1;
-    height: 280px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding-right: 4px;
-    margin-bottom: 14px;
-    scrollbar-width: thin;
-    scrollbar-color: #1E222B transparent;
-  }
-
-  .msg {
-    max-width: 90%;
-    padding: 10px 13px;
-    border-radius: 12px;
-    font-size: 13px;
-    line-height: 1.55;
-  }
-
-  .msg-user {
-    align-self: flex-end;
-    background: rgba(0,240,255,0.1);
-    border: 1px solid rgba(0,240,255,0.2);
-    color: var(--text);
-    border-bottom-right-radius: 4px;
-  }
-
-  .msg-bot {
-    align-self: flex-start;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-bottom-left-radius: 4px;
-  }
-
-  .msg-bot .sender {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--cyan);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 5px;
-  }
-
-  .typing-loader {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    padding: 10px 13px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    border-bottom-left-radius: 4px;
-    align-self: flex-start;
-  }
-  .typing-loader span {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--cyan);
-    animation: typing-bounce 1.2s ease-in-out infinite;
-  }
-  .typing-loader span:nth-child(2) { animation-delay: 0.15s; }
-  .typing-loader span:nth-child(3) { animation-delay: 0.3s; }
-
-  @keyframes typing-bounce {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-    30% { transform: translateY(-6px); opacity: 1; }
-  }
-
-  .chat-input-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .chat-input {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .chat-input:focus { border-color: rgba(0,240,255,0.35); }
-  .chat-input::placeholder { color: var(--muted); }
-
-  .chat-send {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, var(--cyan), var(--purple));
-    color: #000;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .chat-send:hover { transform: scale(1.06); box-shadow: 0 0 16px rgba(0,240,255,0.4); }
-
-  /* ─── INVESTORS CARD ────────────────── */
-  .investors-card { grid-column: span 6; }
-
-  .investor-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .investor-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 14px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    transition: border-color 0.2s;
-  }
-  .investor-row:hover { border-color: rgba(168,85,247,0.25); }
-
-  .investor-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .investor-role {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .investor-badge {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 6px;
-    font-family: var(--mono);
-    white-space: nowrap;
-  }
-
-  .badge-lead {
-    background: rgba(168,85,247,0.15);
-    border: 1px solid rgba(168,85,247,0.35);
-    color: var(--purple);
-  }
-
-  .badge-part {
-    background: rgba(0,240,255,0.08);
-    border: 1px solid rgba(0,240,255,0.2);
-    color: var(--cyan);
-  }
-
-  /* ─── ROLES CARD ─────────────────────── */
-  .roles-card { grid-column: span 6; }
-
-  .role-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .role-item:last-child { border-bottom: none; }
-
-  .role-icon {
-    width: 42px; height: 42px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .role-icon.gold { background: rgba(255,184,0,0.12); border: 1px solid rgba(255,184,0,0.25); }
-  .role-icon.purple { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.25); }
-
-  .role-info { flex: 1; }
-  .role-name { font-size: 14px; font-weight: 700; }
-  .role-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-  .role-tag {
-    font-size: 10px;
-    font-weight: 700;
-    font-family: var(--mono);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 6px;
-  }
-
-  .tag-priority { background: rgba(255,184,0,0.12); color: #FFB800; border: 1px solid rgba(255,184,0,0.25); }
-  .tag-elite { background: rgba(168,85,247,0.12); color: var(--purple); border: 1px solid rgba(168,85,247,0.25); }
-
-  /* ─── TECH CARD ──────────────────────── */
-  .tech-card { grid-column: span 12; }
-
-  .tech-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px;
-  }
-
-  .tech-item {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
-    transition: all 0.25s;
-  }
-  .tech-item:hover { border-color: rgba(0,240,255,0.2); transform: translateY(-2px); }
-
-  .tech-icon { font-size: 24px; margin-bottom: 10px; }
-  .tech-label { font-size: 12px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
-  .tech-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
-  /* ─── MODAL ───────────────────────────── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(5,6,8,0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-  }
-  .modal-overlay.show { opacity: 1; pointer-events: all; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 28px;
-    width: 360px;
-    max-width: calc(100vw - 40px);
-    box-shadow: 0 0 60px rgba(168,85,247,0.15), 0 0 120px rgba(0,240,255,0.08);
-    transform: scale(0.95) translateY(8px);
-    transition: transform 0.25s;
-  }
-  .modal-overlay.show .modal { transform: scale(1) translateY(0); }
-
-  .modal-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
-
-  .wallet-option {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--surface2);
-    cursor: pointer;
-    margin-bottom: 10px;
-    transition: all 0.2s;
-  }
-  .wallet-option:hover { border-color: rgba(0,240,255,0.3); box-shadow: 0 0 18px rgba(0,240,255,0.08); }
-
-  .wallet-emoji { font-size: 26px; }
-  .wallet-name { font-size: 14px; font-weight: 600; }
-  .wallet-type { font-size: 11px; color: var(--muted); }
-
-  .modal-close {
-    width: 100%;
-    margin-top: 8px;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: transparent;
-    color: var(--muted);
-    font-family: var(--font);
-    font-size: 13px;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-  .modal-close:hover { border-color: var(--border); color: var(--text); }
-
-  /* Spinner */
-  .spinner-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(5,6,8,0.92);
-    backdrop-filter: blur(16px);
-    z-index: 1100;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-  .spinner-overlay.show { opacity: 1; pointer-events: all; }
-
-  .spinner {
-    width: 50px; height: 50px;
-    border: 2px solid var(--border);
-    border-top-color: var(--cyan);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .spinner-text { font-size: 14px; color: var(--muted); font-family: var(--mono); }
-
-  /* ─── TOAST ───────────────────────────── */
-  .toast-container {
-    position: fixed;
-    top: 80px;
-    right: 24px;
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .toast {
-    background: var(--surface);
-    border: 1px solid rgba(0,255,133,0.35);
-    border-radius: 12px;
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 0 30px rgba(0,255,133,0.2);
-    animation: toast-in 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
-    max-width: 300px;
-  }
-
-  .toast.hide { animation: toast-out 0.3s ease-out forwards; }
-
-  @keyframes toast-in {
-    from { transform: translateX(120%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-  @keyframes toast-out {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(120%); opacity: 0; }
-  }
-
-  .toast-icon { font-size: 22px; }
-  .toast-msg { font-size: 13px; font-weight: 600; color: var(--green); }
-  .toast-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  /* ─── SCROLLBAR ──────────────────────── */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #1E222B; border-radius: 2px; }
-
-  /* ─── MOBILE ─────────────────────────── */
-  @media (max-width: 768px) {
-    .topbar { padding: 12px 16px; }
-    .container { padding: 20px 16px 48px; }
-    .hero { padding: 36px 12px 32px; }
-    .hero-stats { gap: 24px; }
-    .chart-card, .metrics-card, .terminal-card, .ai-card,
-    .investors-card, .roles-card { grid-column: span 12; }
-  }
-
-  /* ─── ORACLE INFO ─── */
-  .oracle-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(0,240,255,0.06);
-    border: 1px solid rgba(0,240,255,0.15);
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--cyan);
-    margin-top: 6px;
-  }
-
-  .fund-total {
-    text-align: center;
-    padding: 18px 0 10px;
-  }
-  .fund-amount {
-    font-size: 42px;
-    font-weight: 800;
-    font-family: var(--mono);
-    background: linear-gradient(90deg, #fff 0%, var(--purple) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .fund-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rialo Ecosystem & Research Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #060709;
+            --card-bg: #0F1115;
+            --border-color: #1E222B;
+            --accent-cyan: #00F0FF;
+            --accent-purple: #A855F7;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --success-green: #10B981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .connect-btn {
+            background: rgba(15, 17, 21, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            backdrop-filter: blur(12px);
+        }
+
+        .connect-btn:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .connect-btn.connected {
+            border-color: var(--success-green);
+            color: var(--success-green);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Bento Grid */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto auto;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-a { grid-column: span 2; }
+        .card-b { grid-column: span 1; cursor: pointer; }
+        .card-c { grid-column: span 1; grid-row: span 2; }
+        .card-d { grid-column: span 1; }
+        .card-e { grid-column: span 2; }
+
+        /* Card A: Chart */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        /* Card B: Investors */
+        .investor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .investor-logo {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .investor-logo:hover {
+            border-color: var(--accent-purple);
+            color: var(--text-primary);
+        }
+
+        .click-hint {
+            font-size: 11px;
+            color: var(--accent-purple);
+            margin-top: 12px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        /* Card C: Terminal */
+        .terminal {
+            background: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            height: 100%;
+            min-height: 300px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .terminal-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 100%;
+            gap: 8px;
+        }
+
+        .log-line {
+            opacity: 0;
+            animation: fadeInUp 0.3s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-system { color: var(--accent-cyan); }
+        .log-data { color: var(--accent-purple); }
+        .log-zk { color: var(--success-green); }
+
+        /* Card D: Testnet Guide */
+        .guide-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .guide-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .guide-icon {
+            color: var(--accent-cyan);
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .guide-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        /* Card E: Accordion */
+        .accordion-item {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            padding: 16px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            color: var(--accent-cyan);
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s ease;
+            color: var(--accent-purple);
+        }
+
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+        }
+
+        .accordion-item.active .accordion-content {
+            max-height: 200px;
+            transition: max-height 0.4s ease-in-out;
+        }
+
+        .accordion-body {
+            padding-bottom: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .article-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .article-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Chat Core */
+        .chat-core {
+            width: 100%;
+            height: 750px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lang-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 4px;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+
+        .lang-option {
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 2;
+            transition: color 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .lang-option.active {
+            color: var(--text-primary);
+        }
+
+        .lang-slider {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 16px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+        }
+
+        .lang-toggle.ru .lang-slider {
+            transform: translateX(100%);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            animation: messageSlide 0.3s ease;
+        }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            color: var(--text-primary);
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            color: var(--text-primary);
+        }
+
+        .chat-input-area {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .chat-send {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .chat-send:hover {
+            opacity: 0.9;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(6, 7, 9, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+
+        .wallet-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .wallet-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .wallet-option:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        .wallet-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Investor Table */
+        .investor-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .investor-table th,
+        .investor-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .investor-table th {
+            color: var(--accent-cyan);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .investor-table td {
+            color: var(--text-secondary);
+        }
+
+        .investor-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--card-bg);
+            border: 1px solid var(--success-green);
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: toastSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 300px;
+        }
+
+        @keyframes toastSlide {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast-icon {
+            color: var(--success-green);
+            font-size: 20px;
+        }
+
+        .toast-message {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            .card-a, .card-b, .card-c, .card-d, .card-e {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- ░░ TOPBAR ░░ -->
-<nav class="topbar">
-  <div class="logo">
-    <div class="logo-icon">R</div>
-    <div class="logo-text">Rialo <span>Hub</span></div>
-  </div>
-  <div class="topbar-right">
-    <div class="badge-live">Mainnet Alpha Live</div>
-    <button id="walletBtn" onclick="openWalletModal()">⚡ Connect Wallet</button>
-  </div>
-</nav>
+    <div class="container">
+        <header>
+            <div class="logo">Rialo Intelligence Hub</div>
+            <button class="connect-btn" id="connectBtn" onclick="openWalletModal()">
+                Connect Wallet
+            </button>
+        </header>
 
-<!-- ░░ WALLET MODAL ░░ -->
-<div class="modal-overlay" id="walletModal">
-  <div class="modal">
-    <div class="modal-title">Select Wallet</div>
-    <div class="modal-sub">Connect to Rialo Network — Subzero Labs</div>
-    <div class="wallet-option" onclick="connectWallet('Phantom')">
-      <div class="wallet-emoji">👻</div>
-      <div>
-        <div class="wallet-name">Phantom</div>
-        <div class="wallet-type">Solana-native • Recommended</div>
-      </div>
-    </div>
-    <div class="wallet-option" onclick="connectWallet('Solflare')">
-      <div class="wallet-emoji">☀️</div>
-      <div>
-        <div class="wallet-name">Solflare</div>
-        <div class="wallet-type">Solana • Hardware support</div>
-      </div>
-    </div>
-    <div class="wallet-option" onclick="connectWallet('Backpack')">
-      <div class="wallet-emoji">🎒</div>
-      <div>
-        <div class="wallet-name">Backpack</div>
-        <div class="wallet-type">xNFT • Multi-chain</div>
-      </div>
-    </div>
-    <button class="modal-close" onclick="closeWalletModal()">Cancel</button>
-  </div>
-</div>
+        <div class="bento-grid">
+            <!-- Card A: Timeline Chart -->
+            <div class="card card-a">
+                <div class="card-title">
+                    <span>📈</span> Ecosystem Development Timeline
+                </div>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
 
-<!-- ░░ SPINNER OVERLAY ░░ -->
-<div class="spinner-overlay" id="spinnerOverlay">
-  <div class="spinner"></div>
-  <div class="spinner-text" id="spinnerText">Authenticating wallet...</div>
-</div>
+            <!-- Card B: Investors -->
+            <div class="card card-b" onclick="openInvestorModal()">
+                <div class="card-title">
+                    <span>🏛️</span> Strategic Investors
+                </div>
+                <div class="investor-grid">
+                    <div class="investor-logo">Pantera</div>
+                    <div class="investor-logo">Coinbase</div>
+                    <div class="investor-logo">Variant</div>
+                    <div class="investor-logo">Fabric</div>
+                    <div class="investor-logo">Susquehanna</div>
+                    <div class="investor-logo">Hashed</div>
+                </div>
+                <div class="click-hint">Click to view funding details</div>
+            </div>
 
-<!-- ░░ TOAST CONTAINER ░░ -->
-<div class="toast-container" id="toastContainer"></div>
+            <!-- Card C: Terminal Logs -->
+            <div class="card card-c">
+                <div class="card-title">
+                    <span>⚡</span> Live Node Console
+                </div>
+                <div class="terminal">
+                    <div class="terminal-content" id="terminalContent">
+                        <!-- Logs injected via JS -->
+                    </div>
+                </div>
+            </div>
 
-<!-- ░░ MAIN ░░ -->
-<div class="container">
+            <!-- Card D: Testnet Guide -->
+            <div class="card card-d">
+                <div class="card-title">
+                    <span>🧪</span> Playground Testnet Guide
+                </div>
+                <ul class="guide-list">
+                    <li class="guide-item">
+                        <span class="guide-icon">→</span>
+                        <span>Access the public environment at <a href="https://playground.rialo.io" class="guide-link" target="_blank">playground.rialo.io</a></span>
+                    </li>
+                    <li class="guide-item">
+                        <span class="guide-icon">→</span>
+                        <span>Request faucet test tokens for deployment</span>
+                    </li>
+                    <li class="guide-item">
+                        <span class="guide-icon">→</span>
+                        <span>Deploy RISC-V test state transitions</span>
+                    </li>
+                    <li class="guide-item">
+                        <span class="guide-icon">→</span>
+                        <span>Verify execution latency and SVM throughput</span>
+                    </li>
+                </ul>
+            </div>
 
-  <!-- HERO -->
-  <div class="hero">
-    <div class="hero-eyebrow">⚡ Powered by Subzero Labs</div>
-    <h1>The Agent Economy<br>Runs on Rialo</h1>
-    <p>A next-generation Layer 1 blockchain enabling autonomous AI agents to transact, compute, and govern — natively on-chain.</p>
-    <div class="hero-stats">
-      <div class="stat">
-        <span class="stat-val">1M+</span>
-        <span class="stat-label">TPS Capacity</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">$20M</span>
-        <span class="stat-label">Seed Round</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">SVM</span>
-        <span class="stat-label">+ RISC-V Engine</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">0</span>
-        <span class="stat-label">External Oracles</span>
-      </div>
-    </div>
-  </div>
+            <!-- Card E: Research Articles -->
+            <div class="card card-e">
+                <div class="card-title">
+                    <span>📚</span> Research & Ecosystem Articles
+                </div>
+                
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Rialo Foundations: Introduction to the Real-World Chain</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            Explaining the Layer 1 vision for the Agent Economy where AI models transact on-chain natively without human friction.
+                            <a href="https://rialo.io" class="article-link" target="_blank">Read more at rialo.io →</a>
+                        </div>
+                    </div>
+                </div>
 
-  <!-- BENTO -->
-  <div class="bento">
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Subzero Labs: Merging SVM Performance with RISC-V Safety</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            Explaining the dual-engine architecture utilizing Solana Virtual Machine for 1M+ TPS scalability and RISC-V for secure, deterministic smart contracts written in Rust/C++.
+                            <a href="https://rialo.io" class="article-link" target="_blank">Read more at rialo.io →</a>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- ① PERFORMANCE CHART -->
-    <div class="card chart-card">
-      <div class="card-title">Live Execution Layer — SVM Stress Test</div>
-      <div class="tps-display">
-        <span class="tps-num" id="tpsNum">1,024,318</span>
-        <span class="tps-unit">TPS</span>
-        <span class="tps-delta" id="tpsDelta">+2.1%</span>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="perfChart"></canvas>
-      </div>
-    </div>
-
-    <!-- ② NETWORK METRICS -->
-    <div class="card metrics-card">
-      <div class="card-title">Network Metrics</div>
-      <div class="metric-row">
-        <span class="metric-name">Block Time</span>
-        <div>
-          <div class="metric-val cyan" id="blockTime">0.43s</div>
-          <div class="progress-bar"><div class="progress-fill"></div></div>
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>CBOE Innovation Spotlight: Bringing Institutional Data On-Chain</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            Detailing the May 2026 milestone where Rialo integrated CBOE EDGX Equities Exchange data feeds, giving on-chain agents oracle-less access to 9,500+ financial assets.
+                            <a href="https://rialo.io" class="article-link" target="_blank">Read more at rialo.io →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="metric-row">
-        <span class="metric-name">Active Validators</span>
-        <div class="metric-val green" id="validators">2,841</div>
-      </div>
-      <div class="metric-row">
-        <span class="metric-name">ZK Proofs / Block</span>
-        <div class="metric-val purple" id="zkProofs">14,229</div>
-      </div>
-      <div class="metric-row">
-        <span class="metric-name">Finality</span>
-        <div class="metric-val cyan">~400ms</div>
-      </div>
-      <div class="metric-row">
-        <span class="metric-name">Oracle Dependency</span>
-        <div class="metric-val green">None ✓</div>
-      </div>
-      <div class="metric-row">
-        <span class="metric-name">Architecture</span>
-        <div class="metric-val" style="font-size:11px">SVM + RISC-V</div>
-      </div>
-    </div>
 
-    <!-- ③ TERMINAL -->
-    <div class="card terminal-card">
-      <div class="card-title">Validator Node Console — Live Network Feed</div>
-      <div class="terminal">
-        <div class="terminal-header">
-          <div class="dot dot-r"></div>
-          <div class="dot dot-y"></div>
-          <div class="dot dot-g"></div>
-          <span class="terminal-title">rialo-validator-node — /dev/stdout</span>
+        <!-- Bottom Block: Chat Core -->
+        <div class="chat-core">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <span>🤖</span> Rialo AI Research Assistant
+                </div>
+                <div class="lang-toggle" id="langToggle" onclick="toggleLanguage()">
+                    <div class="lang-slider"></div>
+                    <div class="lang-option active" id="langEn">EN</div>
+                    <div class="lang-option" id="langRu">RU</div>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    Welcome to the Rialo Intelligence Hub. I can provide information about Rialo's mission, funding, founders, CBOE integration, and the Playground testnet. How can I assist you today?
+                </div>
+            </div>
+            
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask about Rialo, Subzero Labs, Pantera, CBOE, or Testnet..." onkeypress="handleKeyPress(event)">
+                <button class="chat-send" onclick="sendMessage()">Send</button>
+            </div>
         </div>
-        <div class="terminal-body" id="terminalBody"></div>
-      </div>
-    </div>
-
-    <!-- ④ AI AGENT CHAT -->
-    <div class="card ai-card">
-      <div class="card-title">Rialo AI Agent — Intelligent Hub</div>
-      <div class="lang-toggle">
-        <button class="lang-btn active" id="btnEN" onclick="setLang('EN')">EN</button>
-        <button class="lang-btn" id="btnRU" onclick="setLang('RU')">RU</button>
-      </div>
-      <div class="chat-messages" id="chatMessages"></div>
-      <div class="chat-input-row">
-        <input class="chat-input" id="chatInput" type="text"
-          placeholder="Ask about Rialo..." 
-          onkeydown="if(event.key==='Enter') sendChat()">
-        <button class="chat-send" onclick="sendChat()">↑</button>
-      </div>
     </div>
 
-    <!-- ⑤ INVESTORS -->
-    <div class="card investors-card">
-      <div class="card-title">Institutional Backing</div>
-      <div class="fund-total">
-        <div class="fund-amount">$20,000,000</div>
-        <div class="fund-label">Seed Round — Closed</div>
-      </div>
-      <div class="investor-list">
-        <div class="investor-row">
-          <div>
-            <div class="investor-name">Pantera Capital</div>
-            <div class="investor-role">Lead investor • Crypto veteran fund</div>
-          </div>
-          <span class="investor-badge badge-lead">LEAD</span>
+    <!-- Wallet Modal -->
+    <div class="modal-overlay" id="walletModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('walletModal')">&times;</button>
+            <div class="modal-title">Connect Wallet</div>
+            <div class="wallet-options">
+                <div class="wallet-option" onclick="connectWallet('Phantom')">
+                    <div class="wallet-icon">P</div>
+                    <div>
+                        <div style="font-weight: 600;">Phantom</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Connect to Phantom Wallet</div>
+                    </div>
+                    <div class="spinner" id="spinner-Phantom"></div>
+                </div>
+                <div class="wallet-option" onclick="connectWallet('Solflare')">
+                    <div class="wallet-icon">S</div>
+                    <div>
+                        <div style="font-weight: 600;">Solflare</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Connect to Solflare Wallet</div>
+                    </div>
+                    <div class="spinner" id="spinner-Solflare"></div>
+                </div>
+                <div class="wallet-option" onclick="connectWallet('Backpack')">
+                    <div class="wallet-icon">B</div>
+                    <div>
+                        <div style="font-weight: 600;">Backpack</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Connect to Backpack Wallet</div>
+                    </div>
+                    <div class="spinner" id="spinner-Backpack"></div>
+                </div>
+            </div>
         </div>
-        <div class="investor-row">
-          <div>
-            <div class="investor-name">Coinbase Ventures</div>
-            <div class="investor-role">Participant • Strategic partner</div>
-          </div>
-          <span class="investor-badge badge-part">PART</span>
-        </div>
-        <div class="investor-row">
-          <div>
-            <div class="investor-name">Variant Fund</div>
-            <div class="investor-role">Participant • Web3 native</div>
-          </div>
-          <span class="investor-badge badge-part">PART</span>
-        </div>
-        <div class="investor-row">
-          <div>
-            <div class="investor-name">Fabric Ventures</div>
-            <div class="investor-role">Participant • DeFi specialist</div>
-          </div>
-          <span class="investor-badge badge-part">PART</span>
-        </div>
-        <div class="investor-row">
-          <div>
-            <div class="investor-name">Susquehanna</div>
-            <div class="investor-role">Participant • Institutional quant</div>
-          </div>
-          <span class="investor-badge badge-part">PART</span>
-        </div>
-      </div>
     </div>
 
-    <!-- ⑥ ROLES & AIRDROP -->
-    <div class="card roles-card">
-      <div class="card-title">Airdrop Roles & Incentives</div>
-      <div style="margin-bottom:4px; font-size:12px; color:var(--muted)">Active at <span style="color:var(--cyan); font-family:var(--mono)">playground.rialo.io</span></div>
-      <div class="role-item">
-        <div class="role-icon gold">🏆</div>
-        <div class="role-info">
-          <div class="role-name" style="color:#FFB800">Club Member</div>
-          <div class="role-desc">Top 400 contributors. Highest-priority retroactive airdrop pool at Mainnet launch.</div>
-          <div class="oracle-tag">Discord Role • Exclusive</div>
+    <!-- Investor Modal -->
+    <div class="modal-overlay" id="investorModal">
+        <div class="modal" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeModal('investorModal')">&times;</button>
+            <div class="modal-title">Seed Funding Round Details</div>
+            <table class="investor-table">
+                <tr>
+                    <th>Total Raised</th>
+                    <td>$20,000,000</td>
+                </tr>
+                <tr>
+                    <th>Round Stage</th>
+                    <td>Seed Round</td>
+                </tr>
+                <tr>
+                    <th>Lead Investor</th>
+                    <td>Pantera Capital</td>
+                </tr>
+                <tr>
+                    <th>Co-investors</th>
+                    <td>Coinbase Ventures, Variant Fund, Fabric Ventures, Susquehanna (SIG), Hashed, Mysten Labs, Mirana Ventures</td>
+                </tr>
+                <tr>
+                    <th>Deal Structure</th>
+                    <td>Equity in Subzero Labs with token warrants</td>
+                </tr>
+            </table>
         </div>
-        <span class="role-tag tag-priority">Priority</span>
-      </div>
-      <div class="role-item">
-        <div class="role-icon purple">⚙️</div>
-        <div class="role-info">
-          <div class="role-name" style="color:var(--purple)">Builder</div>
-          <div class="role-desc">Top 40 developers. Separate elite allocation. Separate genesis pool reserved.</div>
-          <div class="oracle-tag">Dev Role • Top 40</div>
-        </div>
-        <span class="role-tag tag-elite">Elite</span>
-      </div>
-      <div class="role-item">
-        <div class="role-icon" style="background:rgba(0,240,255,0.08);border:1px solid rgba(0,240,255,0.2)">⚡</div>
-        <div class="role-info">
-          <div class="role-name" style="color:var(--cyan)">Testnet Participant</div>
-          <div class="role-desc">Earn Rialo Points via on-chain actions. Snapshot at Mainnet.</div>
-          <div class="oracle-tag">Points Program • Open</div>
-        </div>
-        <span class="role-tag" style="background:rgba(0,240,255,0.08);color:var(--cyan);border:1px solid rgba(0,240,255,0.2)">Active</span>
-      </div>
     </div>
 
-    <!-- ⑦ TECH STACK -->
-    <div class="card tech-card">
-      <div class="card-title">Technology Stack</div>
-      <div class="tech-grid">
-        <div class="tech-item">
-          <div class="tech-icon">⚡</div>
-          <div class="tech-label">Solana VM (SVM)</div>
-          <div class="tech-desc">Hyper-scalable execution layer processing 1M+ TPS with sub-second block finality.</div>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon">🔬</div>
-          <div class="tech-label">RISC-V Compiler</div>
-          <div class="tech-desc">Deterministic AI computation and cryptographic smart contracts compiled to RISC-V ISA.</div>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon">🔐</div>
-          <div class="tech-label">ZK-Proof Layer</div>
-          <div class="tech-desc">Validators generate ZK-proofs for every HTTP fetch ensuring trustless Web2 data integrity.</div>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon">🌐</div>
-          <div class="tech-label">Oracle-less HTTP</div>
-          <div class="tech-desc">Nodes independently query Web2 APIs. No Chainlink dependency. Consensus-native data feeds.</div>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon">🤖</div>
-          <div class="tech-label">Agent Economy</div>
-          <div class="tech-desc">Autonomous AI agents transact, execute contracts, and interact commercially — fully on-chain.</div>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon">🏗️</div>
-          <div class="tech-label">Subzero Labs</div>
-          <div class="tech-desc">Core dev team. Backed by Pantera Capital. Building the infrastructure for on-chain AI civilization.</div>
-        </div>
-      </div>
-    </div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-  </div><!-- /bento -->
-</div>
+    <script>
+        // Chart.js Initialization
+        const ctx = document.getElementById('timelineChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Q1 2025', 'May 2026', 'Q3 2026'],
+                datasets: [{
+                    label: 'Ecosystem Milestones',
+                    data: [20, 45, 80],
+                    borderColor: '#00F0FF',
+                    backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#A855F7',
+                    pointBorderColor: '#00F0FF',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0F1115',
+                        titleColor: '#00F0FF',
+                        bodyColor: '#FFFFFF',
+                        borderColor: '#1E222B',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                const labels = [
+                                    '$20M Seed Round Secured',
+                                    'CBOE Innovation Spotlight',
+                                    'Active Testnet Playground Launch'
+                                ];
+                                return labels[context.dataIndex];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        display: false,
+                        min: 0,
+                        max: 100
+                    },
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94A3B8' }
+                    }
+                }
+            }
+        });
 
-<script>
-// ═══════════════════════════════════════════
-// ░░ WALLET MODULE ░░
-// ═══════════════════════════════════════════
-let walletConnected = false;
+        // Terminal Logs
+        const logs = [
+            { type: 'system', text: '[SYSTEM] Initiating consensus HTTPS request via validation node...' },
+            { type: 'data', text: '[DATA] CBOE EDGX stream initialized: top-of-book pricing active for 9,500 instruments...' },
+            { type: 'zk', text: '[ZK-PROOF] Generating Zero-Knowledge data integrity attestation...' },
+            { type: 'system', text: '[SYSTEM] SVM execution layer synchronized: 1.2M TPS capacity verified.' },
+            { type: 'data', text: '[DATA] RISC-V state transition block #88492 committed successfully.' },
+            { type: 'zk', text: '[ZK-PROOF] Validator signature aggregation complete.' }
+        ];
 
-function openWalletModal() {
-  if (walletConnected) return;
-  document.getElementById('walletModal').classList.add('show');
-}
+        let logIndex = 0;
+        const terminalContent = document.getElementById('terminalContent');
 
-function closeWalletModal() {
-  document.getElementById('walletModal').classList.remove('show');
-}
-
-function connectWallet(name) {
-  closeWalletModal();
-  const spinner = document.getElementById('spinnerOverlay');
-  const spinnerText = document.getElementById('spinnerText');
-  spinnerText.textContent = `Connecting to ${name}...`;
-  spinner.classList.add('show');
-
-  setTimeout(() => {
-    spinner.classList.remove('show');
-    walletConnected = true;
-    const btn = document.getElementById('walletBtn');
-    btn.textContent = '🟢 Connected: Rialo...4x9F';
-    btn.classList.add('connected');
-    showToast(`${name} connected!`, '+500 Rialo Points awarded 🎉');
-  }, 1200);
-}
-
-// ═══════════════════════════════════════════
-// ░░ TOAST MODULE ░░
-// ═══════════════════════════════════════════
-function showToast(title, sub) {
-  const container = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.innerHTML = `<div class="toast-icon">🎯</div><div><div class="toast-msg">${title}</div><div class="toast-sub">${sub}</div></div>`;
-  container.appendChild(t);
-  setTimeout(() => {
-    t.classList.add('hide');
-    setTimeout(() => t.remove(), 400);
-  }, 4000);
-}
-
-// ═══════════════════════════════════════════
-// ░░ PERFORMANCE CHART ░░
-// ═══════════════════════════════════════════
-(function initChart() {
-  const ctx = document.getElementById('perfChart').getContext('2d');
-  const maxPoints = 20;
-  const labels = [];
-  const data = [];
-
-  for (let i = 0; i < maxPoints; i++) {
-    labels.push('');
-    data.push(Math.floor(Math.random() * 350000) + 850000);
-  }
-
-  const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-  gradient.addColorStop(0, 'rgba(0,240,255,0.22)');
-  gradient.addColorStop(1, 'rgba(0,240,255,0)');
-
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        borderColor: '#00F0FF',
-        borderWidth: 2,
-        backgroundColor: gradient,
-        fill: true,
-        tension: 0.45,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        pointHoverBackgroundColor: '#00F0FF'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 300 },
-      plugins: { legend: { display: false }, tooltip: {
-        backgroundColor: '#13171E',
-        borderColor: '#1E222B',
-        borderWidth: 1,
-        titleColor: '#00F0FF',
-        bodyColor: '#5A6478',
-        callbacks: {
-          label: ctx => ' ' + ctx.parsed.y.toLocaleString() + ' TPS'
+        function addLog() {
+            const log = logs[logIndex % logs.length];
+            const div = document.createElement('div');
+            div.className = `log-line log-${log.type}`;
+            div.textContent = log.text;
+            terminalContent.appendChild(div);
+            
+            if (terminalContent.children.length > 8) {
+                terminalContent.removeChild(terminalContent.children[0]);
+            }
+            
+            logIndex++;
         }
-      }},
-      scales: {
-        x: { display: false },
-        y: {
-          display: true,
-          grid: { color: 'rgba(30,34,43,0.8)', drawBorder: false },
-          ticks: {
-            color: '#5A6478',
-            font: { family: 'JetBrains Mono', size: 10 },
-            callback: v => (v / 1e6).toFixed(2) + 'M'
-          },
-          min: 700000,
-          max: 1400000
+
+        setInterval(addLog, 2000);
+        for (let i = 0; i < 4; i++) addLog();
+
+        // Accordion Logic
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            const isActive = item.classList.contains('active');
+            
+            // Close all
+            document.querySelectorAll('.accordion-item').forEach(acc => {
+                acc.classList.remove('active');
+            });
+            
+            // Open clicked if it wasn't active
+            if (!isActive) {
+                item.classList.add('active');
+            }
         }
-      }
-    }
-  });
 
-  let prevTps = data[data.length - 1];
+        // Modal Logic
+        function openWalletModal() {
+            document.getElementById('walletModal').classList.add('active');
+        }
 
-  setInterval(() => {
-    const newTps = Math.floor(Math.random() * 350000) + 850000;
-    const pct = (((newTps - prevTps) / prevTps) * 100).toFixed(1);
-    prevTps = newTps;
+        function openInvestorModal() {
+            document.getElementById('investorModal').classList.add('active');
+        }
 
-    chart.data.labels.push('');
-    chart.data.datasets[0].data.push(newTps);
-    if (chart.data.labels.length > maxPoints) {
-      chart.data.labels.shift();
-      chart.data.datasets[0].data.shift();
-    }
-    chart.update('none');
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
 
-    // Update TPS display
-    document.getElementById('tpsNum').textContent = newTps.toLocaleString();
-    const delta = document.getElementById('tpsDelta');
-    const sign = pct >= 0 ? '+' : '';
-    delta.textContent = `${sign}${pct}%`;
-    delta.style.color = pct >= 0 ? '#00FF85' : '#FF5F56';
-    delta.style.background = pct >= 0 ? 'rgba(0,255,133,0.08)' : 'rgba(255,95,86,0.08)';
+        // Wallet Connection Logic
+        function connectWallet(walletName) {
+            const spinner = document.getElementById(`spinner-${walletName}`);
+            spinner.style.display = 'block';
+            
+            setTimeout(() => {
+                spinner.style.display = 'none';
+                closeModal('walletModal');
+                
+                const btn = document.getElementById('connectBtn');
+                btn.textContent = 'Connected: Rialo...4x9F';
+                btn.classList.add('connected');
+                btn.onclick = null;
+                
+                showToast('+500 Playground Points Granted!');
+            }, 1000);
+        }
 
-    // Randomize other metrics
-    document.getElementById('blockTime').textContent = (0.38 + Math.random() * 0.12).toFixed(2) + 's';
-    document.getElementById('validators').textContent = (2800 + Math.floor(Math.random() * 80)).toLocaleString();
-    document.getElementById('zkProofs').textContent = (13000 + Math.floor(Math.random() * 2000)).toLocaleString();
-  }, 1500);
-})();
+        // Toast Logic
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <span class="toast-icon">✓</span>
+                <span class="toast-message">${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
 
-// ═══════════════════════════════════════════
-// ░░ TERMINAL MODULE ░░
-// ═══════════════════════════════════════════
-(function initTerminal() {
-  const body = document.getElementById('terminalBody');
-  const logs = [
-    { cls: 'log-ok', prefix: '[OK]', msgs: [
-      'Verified RISC-V ZK-Proof for block #%BLOCK%',
-      'ZK-circuit compiled successfully — 1,024 gates',
-      'Agent wallet 0x%HASH% balance verified on SVM',
-      'Consensus finalized — 2,841 validators signed',
-      'HTTP response authenticated via ZK-attestation',
-      'Smart contract executed — gas: %GAS% units',
-    ]},
-    { cls: 'log-info', prefix: '[INCOMING]', msgs: [
-      'Web2 API feed event triggered payout to 0x%HASH%',
-      'Twitter/X oracle-less fetch — data hash verified',
-      'Agent-to-Agent transaction initiated — 4,200 RALO',
-      'HTTP GET api.coingecko.com — validated in consensus',
-      'New validator joined — node ID: %HASH%',
-    ]},
-    { cls: 'log-svm', prefix: '[SOLANA VM]', msgs: [
-      'Block consensus reached in 0.%MS%s',
-      'SVM execution layer processed %TPS% TPS this epoch',
-      'Program deployment — RISC-V bytecode uploaded',
-      'Cross-shard message verified in %MS%ms',
-      'Epoch boundary — rewards distributed to validators',
-    ]},
-    { cls: 'log-warn', prefix: '[WARN]', msgs: [
-      'Validator node-0x%HASH% latency spiked to 12ms',
-      'Mempool backlog: %QUEUE% pending txns — clearing',
-      'HTTP fetch retry #2 — node-0x%HASH% timeout',
-    ]}
-  ];
+        // Chat Logic
+        let currentLang = 'en';
+        
+        const roots = {
+            identity: {
+                keywords: ['суть', 'функц', 'зачем', 'что это', 'миссия', 'о проекте', 'концепц', 'what is', 'purpose', 'mission', 'about', 'concept'],
+                ru: "Главная суть Rialo от Subzero Labs — это построение инфраструктуры Layer 1 для 'Экономики ИИ-Агентов' (Agent Economy). Блокчейн позволяет запускать автономные ИИ-программы прямо внутри смарт-контрактов без серверов Web2, поддерживает высокую скорость микроплатежей между роботами и позволяет валидаторам считывать данные из интернета напрямую.",
+                en: "Rialo (by Subzero Labs) is a decentralized Layer 1 blockchain built explicitly for the 'Agent Economy'. It allows autonomous AI models to execute on-chain commercial functions without Web2 servers, delivering massive scalability and native web connectivity."
+            },
+            funding: {
+                keywords: ['инвест', 'деньг', 'сколько', 'собрал', 'капитал', 'раунд', 'фонд', 'пантер', 'коинбейс', 'funding', 'invest', 'investors', 'money', 'pantera', 'coinbase', 'raised', 'seed'],
+                ru: "Проект Rialo успешно закрыл посевной раунд финансирования на сумму 20 000 000 долларов ($20M). Раунд возглавил культовый венчурный фонд Pantera Capital при участии Coinbase Ventures, Variant Fund, Fabric Ventures и Susquehanna.",
+                en: "Rialo successfully secured $20,000,000 in a seed financing round strictly led by Pantera Capital. Strategic co-investors include Coinbase Ventures, Variant Fund, Fabric Ventures, and Susquehanna (SIG)."
+            },
+            founders: {
+                keywords: ['создател', 'автор', 'сео', 'кто сделал', 'основател', 'команд', 'аде', 'лу', 'ceo', 'founder', 'subzero', 'labs', 'created', 'team', 'ade', 'lu'],
+                ru: "Создателем Rialo является лаборатория Subzero Labs (Сан-Франциско). Сооснователи проекта — Аде Адеподжу (CEO, экс-инженер Mysten Labs/Sui, Netflix, AMD) и Лу Чжан (CTO, экс-инженер Mysten Labs, Meta). Команда состоит из ветеранов Apple, Google и Citadel.",
+                en: "Rialo is engineered by Subzero Labs based in San Francisco. It was co-founded by Ade Adepoju (CEO, former core engineer at Mysten Labs/Sui, Netflix) and Lu Zhang (CTO, former engineer at Mysten Labs and Meta), alongside staff from Google, Apple, and Solana."
+            },
+            cboe: {
+                keywords: ['cboe', 'биржа', 'акции', 'инструмент', 'фид', 'котиров', 'exchange', 'assets', 'equities', 'stock', 'feed'],
+                ru: "В мае 2026 года Rialo попал в инновационный трек американской биржи CBOE. Сеть интегрирует прямой фид данных CBOE EDGX Equities Exchange, предоставляя умным ИИ-агентам встроенный, не зависящий от оракулов доступ к реальным котировкам более 9500 финансовых инструментов.",
+                en: "In May 2026, Rialo was officially featured in the CBOE Innovation Spotlight. The blockchain integrates a direct on-chain feed of the CBOE EDGX Equities Exchange, giving automated AI agents native, oracle-less pricing access to over 9,500 real-world assets."
+            },
+            testnet: {
+                keywords: ['тестнет', 'плейграунд', 'playground', 'проверить', 'кошельк', 'транзакц', 'testnet', 'faucet'],
+                ru: "Публичный тестнет Rialo активен на playground.rialo.io. Разработчики и пользователи могут свободно тестировать инфраструктуру сети, запрашивать тестовые токены, разворачивать смарт-контракты RISC-V и запускать симуляции транзакций ИИ-агентов.",
+                en: "The open testnet environment is live at playground.rialo.io. Users and developers can request faucet test tokens, interact with the SVM execution layer, deploy RISC-V programs, and run mock state transitions to evaluate the network's throughput."
+            }
+        };
 
-  function randHex(n) {
-    return [...Array(n)].map(() => Math.floor(Math.random() * 16).toString(16)).join('').toUpperCase();
-  }
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'ru' : 'en';
+            updateToggleUI();
+        }
 
-  function getTime() {
-    const d = new Date();
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}.${String(d.getMilliseconds()).padStart(3,'0')}`;
-  }
+        function updateToggleUI() {
+            const toggle = document.getElementById('langToggle');
+            const enOpt = document.getElementById('langEn');
+            const ruOpt = document.getElementById('langRu');
+            
+            if (currentLang === 'ru') {
+                toggle.classList.add('ru');
+                enOpt.classList.remove('active');
+                ruOpt.classList.add('active');
+            } else {
+                toggle.classList.remove('ru');
+                enOpt.classList.add('active');
+                ruOpt.classList.remove('active');
+            }
+        }
 
-  function randomLog() {
-    const group = logs[Math.floor(Math.random() * logs.length)];
-    let msg = group.msgs[Math.floor(Math.random() * group.msgs.length)];
-    msg = msg
-      .replace('%BLOCK%', (4218000 + Math.floor(Math.random() * 9999)).toLocaleString())
-      .replace(/%HASH%/g, randHex(6))
-      .replace('%GAS%', (12000 + Math.floor(Math.random() * 3000)).toLocaleString())
-      .replace(/%MS%/g, (Math.floor(Math.random() * 59) + 40))
-      .replace('%TPS%', (850000 + Math.floor(Math.random() * 300000)).toLocaleString())
-      .replace('%QUEUE%', Math.floor(Math.random() * 400));
+        function detectLanguage(text) {
+            if (/[а-яА-ЯёЁ]/.test(text)) {
+                currentLang = 'ru';
+                updateToggleUI();
+                return 'ru';
+            }
+            currentLang = 'en';
+            updateToggleUI();
+            return 'en';
+        }
 
-    const line = document.createElement('span');
-    line.className = 'log-line';
-    line.innerHTML = `<span class="log-ts">${getTime()}</span><span class="${group.cls}">${group.prefix}</span> ${msg}`;
-    body.appendChild(line);
-    body.scrollTop = body.scrollHeight;
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
 
-    if (body.children.length > 120) body.removeChild(body.firstChild);
-  }
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
 
-  // Seed some initial logs
-  for (let i = 0; i < 10; i++) randomLog();
-  setInterval(randomLog, 800);
-})();
+            const lang = detectLanguage(text);
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.textContent = text;
+            messagesContainer.appendChild(userMsg);
+            
+            input.value = '';
+            
+            // Find matching root
+            const lowerText = text.toLowerCase();
+            let response = '';
+            let matched = false;
+            
+            for (const key in roots) {
+                const root = roots[key];
+                if (root.keywords.some(k => lowerText.includes(k))) {
+                    response = lang === 'ru' ? root.ru : root.en;
+                    matched = true;
+                    break;
+                }
+            }
+            
+            if (!matched) {
+                response = lang === 'ru' 
+                    ? "Я распознал русский язык, но для точного ответа мне нужны ключевые слова. Спросите меня о: 'сути проекта Rialo', 'инвесторах Pantera', 'интеграции биржи CBOE', 'основателях Subzero Labs' или 'техническом тестнете Playground'!"
+                    : "I recognized English, but I need specific keywords to provide an accurate answer. Ask me about: 'Rialo project purpose', 'Pantera investors', 'CBOE exchange integration', 'Subzero Labs founders', or the 'Playground testnet'!";
+            }
+            
+            // Complete Context Reset: Clear old AI message container
+            const oldAiMessages = messagesContainer.querySelectorAll('.message.ai');
+            oldAiMessages.forEach(msg => msg.remove());
+            
+            // Add new AI message
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'message ai';
+            aiMsg.textContent = response;
+            messagesContainer.appendChild(aiMsg);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
 
-// ═══════════════════════════════════════════
-// ░░ AI AGENT — KNOWLEDGE ENGINE ░░
-// ═══════════════════════════════════════════
-let currentLang = 'EN';
-
-function setLang(lang) {
-  currentLang = lang;
-  document.getElementById('btnEN').classList.toggle('active', lang === 'EN');
-  document.getElementById('btnRU').classList.toggle('active', lang === 'RU');
-  const input = document.getElementById('chatInput');
-  input.placeholder = lang === 'EN' ? 'Ask about Rialo...' : 'Спросите о Rialo...';
-}
-
-// ─── KNOWLEDGE GRAPH ─────────────────────
-const KG = [
-  {
-    id: 'MODULE_1',
-    kwEN: ['what is','purpose','essence','definition','summary','about','core','concept','project','mission','goal','subzero','labs','rialo'],
-    kwRU: ['что это','суть','функции','проект','концепция','миссия','цель','определение','база','основы','сабзеро','лаборатория','лабс'],
-    contentEN: `**Rialo — Core Identity & Mission**\n\nRialo is a decentralized Layer 1 blockchain infrastructure developed by Subzero Labs. Its primary mission is to establish the foundational infrastructure for the "Agent Economy" — a paradigm where autonomous AI models interact, transact, and execute commercial functions natively on-chain without any human intervention.\n\nUnlike conventional blockchains optimized purely for human-to-human value transfer, Rialo's architecture is purpose-built for machine-to-machine economic coordination. Every protocol decision — from execution layer design to consensus mechanics — is engineered to serve autonomous AI agents as first-class on-chain citizens.`,
-    contentRU: `**Rialo — Суть и Миссия**\n\nRialo — это децентрализованная блокчейн-инфраструктура первого уровня (Layer 1), разработанная командой Subzero Labs. Её главная миссия — создание фундамента для «Экономики ИИ-Агентов» (Agent Economy), позволяющей автономным искусственным интеллектам взаимодействовать, торговать и совершать коммерческие действия прямо внутри сети без участия человека.\n\nВ отличие от обычных блокчейнов, оптимизированных для передачи ценности между людьми, архитектура Rialo изначально спроектирована для координации экономики машина-к-машине. Каждое протокольное решение — от слоя исполнения до механики консенсуса — создаётся с целью обслуживания автономных ИИ-агентов как полноценных участников сети.`
-  },
-  {
-    id: 'MODULE_2',
-    kwEN: ['technology','architecture','tech','stack','engine','speed','tps','svm','solana vm','risc-v','risc','compiler','execution','performance','safe','virtual machine','vm'],
-    kwRU: ['технологии','архитектура','стек','движок','скорость','тпс','tps','машина','svm','солана','risc-v','risc','процессор','код','компилятор','вычисления','безопасность','виртуальная'],
-    contentEN: `**Dual-Engine Technical Architecture: SVM + RISC-V**\n\nThe Rialo network is powered by a revolutionary dual-engine architecture that separates concerns between speed and safety.\n\nFor hyper-scalable, low-latency transaction execution, the network leverages the Solana Virtual Machine (SVM) — a battle-tested, parallelized runtime capable of processing over 1,000,000 transactions per second. This makes Rialo one of the fastest L1 networks ever deployed.\n\nFor complex AI deterministic computations and cryptographic safety guarantees, Rialo integrates smart contracts compiled directly for the RISC-V processor instruction set architecture. RISC-V's open, minimalist ISA enables formal verification of AI agent behavior, ensuring mathematical proofs of execution correctness. The combination creates a system that is simultaneously fast enough for real-time AI microservices and provably safe for autonomous financial operations.`,
-    contentRU: `**Двухдвижковая Архитектура: SVM + RISC-V**\n\nСеть Rialo работает на революционной двухдвижковой архитектуре, разделяющей задачи скорости и безопасности.\n\nДля сверхмасштабируемого выполнения транзакций с минимальной задержкой применяется виртуальная машина Solana (SVM) — проверенная в бою, параллельная среда исполнения, способная обрабатывать более 1 000 000 TPS. Это делает Rialo одной из самых быстрых сетей L1 в истории.\n\nДля сложных детерминированных вычислений ИИ и криптографических гарантий безопасности Rialo интегрирует смарт-контракты, скомпилированные под ISA процессора RISC-V. Открытый и минималистичный набор инструкций RISC-V позволяет формально верифицировать поведение ИИ-агентов, обеспечивая математические доказательства корректности исполнения. Совокупность технологий создаёт систему, одновременно достаточно быструю для ИИ-микросервисов реального времени и математически безопасную для автономных финансовых операций.`
-  },
-  {
-    id: 'MODULE_3',
-    kwEN: ['oracle','link','internet','data','api','fetch','http','request','feed','twitter','x','oracle-less','connectivity','web','consensus','chainlink','web2'],
-    kwRU: ['оракул','интернет','данные','апи','api','запрос','чтение','твиттер','лента','новости','веб','консенсус','без оракулов','линк','ченлинк','связь','web2'],
-    contentEN: `**Oracle-less Internet Connectivity — Native HTTP in Consensus**\n\nThis is one of Rialo's most groundbreaking architectural innovations. Unlike all standard Layer 1 blockchains that rely on external oracle networks like Chainlink to bridge on-chain and off-chain data — a model that introduces latency, centralization risk, and additional attack surface — Rialo embeds web data retrieval directly into the validator consensus protocol itself.\n\nIn practice, this means validator nodes can independently make cryptographically-secure HTTP requests to any Web2 API — from Twitter feeds to price aggregators to financial data providers. After fetching, nodes use ZK-proof attestations to verify data authenticity across the network before it triggers any smart contract logic. The result: real-time, trustless, oracle-independent access to the full internet, natively within consensus.`,
-    contentRU: `**Работа без Оракулов — Нативный HTTP внутри Консенсуса**\n\nЭто одна из наиболее революционных архитектурных инноваций Rialo. В отличие от всех стандартных блокчейнов первого уровня, зависящих от внешних оракул-сетей вроде Chainlink для связи с офф-чейн данными — что вносит задержки, риск централизации и дополнительную поверхность атаки — Rialo встраивает извлечение веб-данных непосредственно в протокол консенсуса валидаторов.\n\nНа практике это означает, что узлы-валидаторы могут самостоятельно выполнять криптографически защищённые HTTP-запросы к любому Web2 API — от лент Twitter до агрегаторов цен. После получения данных узлы используют ZK-аттестации для верификации подлинности данных по всей сети прежде, чем они инициируют логику смарт-контрактов. Результат: доступ к полному интернету в реальном времени без доверия и без оракулов — нативно, внутри консенсуса.`
-  },
-  {
-    id: 'MODULE_4',
-    kwEN: ['investors','funding','seed','raised','capital','pantera','coinbase','ventures','fabric','variant','money','round','millions','valuation','investment','backed','susquehanna'],
-    kwRU: ['инвесторы','инвестиции','деньги','раунд','фонды','пантера','капитал','коинбейс','венчур','миллионы','сколько','финансирование','сид','панtera','susquehanna','variant','fabric'],
-    contentEN: `**$20M Seed Round — Elite Institutional Backing**\n\nRialo (Subzero Labs) successfully closed a landmark $20,000,000 seed financing round, validating the project's technical credibility and market timing at the highest level of the institutional crypto investment world.\n\nThe round was led by Pantera Capital — one of the oldest, most decorated venture firms exclusively focused on blockchain and crypto since 2013, with a track record of backing Solana, Polkadot, and numerous category-defining protocols. Co-investors include Coinbase Ventures (the strategic arm of the world's leading regulated crypto exchange), Variant (a top-tier Web3-native fund), Fabric Ventures (a European DeFi specialist), and Susquehanna (one of the largest quantitative trading firms in the world). This coalition represents extraordinary conviction from across the spectrum of institutional crypto capital.`,
-    contentRU: `**$20 млн Сид-раунд — Институциональная Поддержка Высшего Уровня**\n\nRialo (Subzero Labs) успешно закрыл знаковый посевной раунд финансирования на 20 000 000 долларов, подтвердив техническое качество проекта и правильность выбора времени выхода на рынок на уровне ведущих институциональных криптоинвесторов.\n\nРаунд возглавил Pantera Capital — один из старейших и наиболее авторитетных венчурных фондов, специализирующихся исключительно на блокчейне и крипто с 2013 года, известный инвестициями в Solana, Polkadot и множество других ключевых протоколов. Соинвесторы: Coinbase Ventures (стратегическое подразделение ведущей регулируемой криптобиржи), Variant (ведущий Web3-нативный фонд), Fabric Ventures (европейский DeFi-специалист) и Susquehanna (один из крупнейших квантовых торговых домов в мире). Этот консорциум отражает исключительный уровень доверия со стороны институционального крипто-капитала.`
-  },
-  {
-    id: 'MODULE_5',
-    kwEN: ['airdrop','drop','rewards','incentives','points','playground','club member','builder','roles','discord','snapshot','token','mainnet','testnet','early'],
-    kwRU: ['аирдроп','дроп','награды','поинты','очки','роли','клуб','мембер','билдер','дискорд','снимок','токен','майннет','запуск','тестнет','ранний'],
-    contentEN: `**Rialo Points & Retroactive Airdrop Program**\n\nRialo's user incentive system is live at playground.rialo.io. Early testnet participants earn Rialo Points for on-chain activities including transactions, contract interactions, and network contributions.\n\nThe most valuable airdrop allocations are reserved for Discord role-holders in two elite tiers: Club Member (top 400 most active contributors to the ecosystem) are designated for the highest-priority retroactive airdrop pool at Mainnet launch. Builder (top 40 developers who have shipped meaningful on-chain applications or tooling) receive a separate genesis-level allocation entirely. Both roles are tracked via Discord and a Mainnet-launch snapshot mechanism. Historical on-chain participation and points accumulation directly determine allocation size — early action has asymmetric upside.`,
-    contentRU: `**Rialo Points и Ретроспективный Аирдроп**\n\nСистема поощрений Rialo активна на playground.rialo.io. Ранние участники тестнета получают Rialo Points за ончейн-активности: транзакции, взаимодействия с контрактами и вклад в развитие сети.\n\nНаиболее ценные аирдроп-аллокации зарезервированы для двух элитных уровней Discord-ролей: Club Member (топ-400 наиболее активных участников экосистемы) — назначены в приоритетный пул ретроспективного аирдропа при запуске Mainnet. Builder (топ-40 разработчиков, запустивших значимые ончейн-приложения или инструментарий) — получают отдельную аллокацию уровня генезиса. Обе роли отслеживаются через Discord и механизм снимка при запуске Mainnet. Историческая ончейн-активность и накопление очков напрямую определяют размер аллокации — ранние действия дают асимметричный потенциал роста.`
-  }
-];
-
-const FALLBACK_EN = `I have analyzed your query, but I need specific keywords to generate an architectural answer. Please ask about Rialo's core features ("what is Rialo", "mission"), its oracle-less consensus ("oracle", "HTTP", "API"), the $20M round led by Pantera ("investors", "funding", "Pantera"), the SVM + RISC-V tech stack ("technology", "TPS", "architecture"), or the Club Member role rewards ("airdrop", "points", "Club Member")!`;
-const FALLBACK_RU = `Я проанализировал ваш вопрос, но для точного ответа мне нужны ключевые слова. Спросите меня о сути Rialo («что такое», «миссия»), работе без оракулов («оракул», «HTTP», «API»), раунде инвестиций от Pantera Capital ($20M) («инвесторы», «финансирование»), синергии SVM + RISC-V («технологии», «архитектура») или о роли Club Member и будущем аирдропе («аирдроп», «поинты», «клуб мембер»)!`;
-
-function matchModules(input) {
-  const lower = input.toLowerCase();
-  const matched = [];
-
-  KG.forEach(module => {
-    const kwArr = currentLang === 'RU' ? module.kwRU : module.kwEN;
-    let score = 0;
-    kwArr.forEach(kw => {
-      if (lower.includes(kw)) score += (kw.length > 6 ? 3 : 1);
-    });
-    // Also check cross-language keywords for flexibility
-    const otherKw = currentLang === 'RU' ? module.kwEN : module.kwRU;
-    otherKw.forEach(kw => {
-      if (lower.includes(kw)) score += 1;
-    });
-    if (score > 0) matched.push({ module, score });
-  });
-
-  matched.sort((a, b) => b.score - a.score);
-  return matched.map(m => m.module);
-}
-
-function synthesizeResponse(modules) {
-  const parts = modules.map(m => currentLang === 'RU' ? m.contentRU : m.contentEN);
-  return parts.join('\n\n---\n\n');
-}
-
-let chatBusy = false;
-
-function sendChat() {
-  if (chatBusy) return;
-  const input = document.getElementById('chatInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-
-  const container = document.getElementById('chatMessages');
-
-  // User bubble
-  const userBubble = document.createElement('div');
-  userBubble.className = 'msg msg-user';
-  userBubble.textContent = msg;
-  container.appendChild(userBubble);
-  container.scrollTop = container.scrollHeight;
-
-  // Typing loader
-  chatBusy = true;
-  const loader = document.createElement('div');
-  loader.className = 'typing-loader';
-  loader.innerHTML = '<span></span><span></span><span></span>';
-  container.appendChild(loader);
-  container.scrollTop = container.scrollHeight;
-
-  setTimeout(() => {
-    loader.remove();
-
-    const matched = matchModules(msg);
-    let responseText = matched.length > 0
-      ? synthesizeResponse(matched)
-      : (currentLang === 'RU' ? FALLBACK_RU : FALLBACK_EN);
-
-    const botBubble = document.createElement('div');
-    botBubble.className = 'msg msg-bot';
-    botBubble.innerHTML = '<div class="sender">Rialo AI Agent</div><div class="bot-text"></div>';
-    container.appendChild(botBubble);
-    container.scrollTop = container.scrollHeight;
-
-    const textEl = botBubble.querySelector('.bot-text');
-    typewrite(textEl, responseText, container, () => { chatBusy = false; });
-  }, 650);
-}
-
-function typewrite(el, text, scroller, done) {
-  // Render markdown-lite: bold **text**
-  let i = 0;
-  const rawChars = text.split('');
-  let rendered = '';
-
-  function tick() {
-    if (i >= rawChars.length) {
-      // final pass: render markdown
-      el.innerHTML = markdownLite(rendered);
-      if (done) done();
-      return;
-    }
-    // Batch some chars for speed
-    const batch = Math.min(3, rawChars.length - i);
-    for (let b = 0; b < batch; b++) {
-      rendered += rawChars[i++];
-    }
-    el.innerHTML = markdownLite(rendered) + '<span style="display:inline-block;width:2px;height:13px;background:var(--cyan);margin-left:2px;vertical-align:middle;animation:pulse-dot 0.7s infinite"></span>';
-    scroller.scrollTop = scroller.scrollHeight;
-    setTimeout(tick, 12);
-  }
-  tick();
-}
-
-function markdownLite(str) {
-  return str
-    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--cyan)">$1</strong>')
-    .replace(/\n---\n/g, '<hr style="border:none;border-top:1px solid var(--border);margin:12px 0">')
-    .replace(/\n/g, '<br>');
-}
-
-// ─── INITIAL BOT GREETING ──────────────────
-(function initChat() {
-  const container = document.getElementById('chatMessages');
-  const greet = document.createElement('div');
-  greet.className = 'msg msg-bot';
-  greet.innerHTML = `<div class="sender">Rialo AI Agent</div><div class="bot-text">Hello! I am the <strong style="color:var(--cyan)">Rialo Intelligence Engine</strong>, powered by Subzero Labs.<br><br>Ask me anything about the network: technology, investors, airdrop roles, oracle-less consensus, or the Agent Economy.<br><br>Switch to <strong style="color:var(--purple)">RU</strong> for Russian-language support. 🚀</div>`;
-  container.appendChild(greet);
-})();
-
-// Allow Enter key
-document.getElementById('chatInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') sendChat();
-});
-
-// Close modal on overlay click
-document.getElementById('walletModal').addEventListener('click', function(e) {
-  if (e.target === this) closeWalletModal();
-});
-</script>
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
 </body>
 </html>
