@@ -551,15 +551,32 @@
         </div>
 
         <!-- Card D: Playground Guide -->
-        <div class="bento-card card-d">
-            <div class="card-title">Playground Testnet Guide</div>
-            <ul class="guide-list">
-                <li>Navigate to <strong>playground.rialo.io</strong> to access the public testnet environment.</li>
-                <li>Request test tokens via the integrated <strong>Faucet</strong> module to fund your development wallet.</li>
-                <li>Deploy and verify <strong>RISC-V</strong> test state transitions to evaluate execution latency.</li>
-                <li>Test autonomous agent mechanics and simulate multi-agent workflows in the <strong>Agent Grand Prix</strong> arena.</li>
-            </ul>
-        </div>
+        <style>
+    .guide-link {
+        color: var(--glow-cyan);
+        text-decoration: none;
+        border-bottom: 1px dashed rgba(0, 240, 255, 0.5);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .guide-link:hover {
+        color: #ffffff;
+        border-bottom: 1px solid var(--glow-cyan);
+        text-shadow: 0 0 8px var(--glow-cyan);
+    }
+</style>
+
+<!-- Card D: Playground Guide -->
+<div class="bento-card card-d">
+    <div class="card-title">Playground Testnet Guide</div>
+    <ul class="guide-list">
+        <li>Navigate to <a href="https://playground.rialo.io" target="_blank" class="guide-link">playground.rialo.io</a> to access the public testnet environment.</li>
+        <li>Request test tokens via the integrated <strong>Faucet</strong> module to fund your development wallet.</li>
+        <li>Deploy and verify <strong>RISC-V</strong> test state transitions to evaluate execution latency.</li>
+        <li>Test autonomous agent mechanics and simulate multi-agent workflows in the <strong>Agent Grand Prix</strong> arena.</li>
+    </ul>
+</div>
 
         <!-- Card E: Research Accordion -->
         <div class="bento-card card-e">
